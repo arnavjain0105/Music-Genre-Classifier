@@ -1,0 +1,68 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+# App title
+st.title("🩺 Diabetes Prediction App")
+st.write("Enter medical details to check the likelihood of diabetes.")
+
+# Load dataset
+@st.cache_data
+def load_data():
+    df = pd.read_csv("diabetes.csv")
+    return df
+
+df = load_data()
+
+# Features and target
+X = df.drop("Outcome", axis=1)
+y = df["Outcome"]
+
+# Train model
+model = RandomForestClassifier()
+model.fit(X, y)
+
+# Sidebar inputs
+st.sidebar.header("Input Patient Data")
+
+def user_input():
+    Pregnancies = st.sidebar.slider('Pregnancies', 0, 17, 1)
+    Glucose = st.sidebar.slider('Glucose', 0, 200, 110)
+    BloodPressure = st.sidebar.slider('Blood Pressure', 0, 122, 70)
+    SkinThickness = st.sidebar.slider('Skin Thickness', 0, 99, 20)
+    Insulin = st.sidebar.slider('Insulin', 0.0, 846.0, 79.0)
+    BMI = st.sidebar.slider('BMI', 0.0, 67.1, 25.0)
+    DiabetesPedigreeFunction = st.sidebar.slider('Diabetes Pedigree Function', 0.0, 2.5, 0.47)
+    Age = st.sidebar.slider('Age', 21, 100, 33)
+
+    data = {
+        'Pregnancies': Pregnancies,
+        'Glucose': Glucose,
+        'BloodPressure': BloodPressure,
+        'SkinThickness': SkinThickness,
+        'Insulin': Insulin,
+        'BMI': BMI,
+        'DiabetesPedigreeFunction': DiabetesPedigreeFunction,
+        'Age': Age
+    }
+    return pd.DataFrame(data, index=[0])
+
+user_data = user_input()
+
+# Show input
+st.subheader("🔍 Patient Input")
+st.write(user_data)
+
+# Prediction
+prediction = model.predict(user_data)
+prediction_proba = model.predict_proba(user_data)
+
+# Output
+st.subheader("🧬 Prediction Result")
+st.write("Result:", "🟥 **Diabetic**" if prediction[0] == 1 else "🟩 **Not Diabetic**")
+
+st.subheader("📊 Prediction Probability")
+st.write(f"Probability of being Diabetic: {prediction_proba[0][1]*100:.2f}%")
